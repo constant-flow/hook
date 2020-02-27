@@ -1,0 +1,80 @@
+### Coloring and styling
+code='\033[0;31m'
+title='\033[0;37m'
+N='\033[0m' # No Color
+B='\033[5m' 
+
+### Easy formatted echo
+out() {	
+	echo -e "$1"
+}
+
+### Easy formatted / underlined title
+tit() {
+	out "${B}${title}$1${N}"
+
+	len=${#1} ch='━' 
+	printf "${title}%*s\n${N}" "$len" | tr ' ' "$ch"
+}
+
+getLineNumber() {
+	echo $(awk "/alias $1=/{print NR}" ~/.folder_hooker_hooks)
+}
+
+hook() {
+
+	if [ $# -eq 0 ]
+	  then
+	  	tit " Folder Hook 📂⚓ : create/manage aliases to jump quickly into your project folders"
+	    out 
+	    tit "👷  Create new hook:"	    
+	    out " Go to folder you want to create a hook for"
+	    out " Type ${code}hook${N} followed by the hook-name, e.g. ${code}hook myProject${N}"
+	    out
+	    tit "🏃  Use a hook:"	    
+	    out " Type the hook-name, e.g. ${code}myProject${N}"
+	    out
+	    tit "🤔  List all hooks"
+	    out " Type ${code}hooks${N}"
+	    out
+	    tit "💀  Delete hook"
+	    out " Type ${code}unhook${N} followed by the hook-name, e.g. ${code}unhook myProject${N}"
+	    return
+	fi
+
+	lineNumber=$(getLineNumber $1)
+
+	if [ ${#lineNumber} -eq 0 ]
+	  then
+	  	locationToHook=$(pwd)
+		echo "alias" $1=\'cd $locationToHook\' >> ~/.folder_hooker_hooks
+		. ~/.bash_profile
+		out "✅  Success: Created the hook: ${code}$1${N} to ${code}$(pwd)${N} ✅"
+	  else
+	  echo "❌  Error: already existed ❌"
+	fi
+}
+
+hooks() {
+	cat ~/.folder_hooker_hooks
+}
+
+unhook() {
+	if [ $# -eq 0 ]
+	  then 
+	  echo "❌  Error: no file specified! ❌"
+	  return;
+	fi
+
+	lineNumber=$(getLineNumber $1)
+
+	if [ ${#lineNumber} -eq 0 ]
+	  then
+	  	out "❌  Error: can't find hook-name: ${code}$1${N}, try to find with ${code}hooks${N} ❌"
+	  else
+		sed -i.bak "${lineNumber}d" ~/.folder_hooker_hooks
+		out "✅  Success: Delete the hook: ${code}$1${N} ✅ 💀"
+	fi
+}
+
+. ~/.folder_hooker_hooks
